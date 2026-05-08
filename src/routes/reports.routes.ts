@@ -18,6 +18,9 @@ function authJwt(req: any, res: any, next: any) {
     }
 }
 
+
+
+
 router.use(authJwt);
 
 router.get("/reports/:eventId", getReportDetail);

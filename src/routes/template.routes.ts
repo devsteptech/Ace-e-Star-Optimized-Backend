@@ -13,9 +13,7 @@ router.use(authAdmin);
 
 router.get("/", listTemplates);
 router.post("/", createTemplate);
-router.get("/:id", getTemplate);
-router.put("/:id", updateTemplate);
-router.get("/:id", getTemplate);    
+router.get("/:id", getTemplate); 
 router.put("/:id", updateTemplate); 
 router.delete("/:id", deleteTemplate);
 

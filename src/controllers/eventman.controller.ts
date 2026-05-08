@@ -66,6 +66,8 @@ export async function getMyEventConfig(req: Request, res: Response) {
             logoUrl: ev.logoUrl || "",
             templateId: String(ev.templateId),
             templateType: ev.templateType,
+
+            questions: ev.questions ?? [],
         },
         template: {
             templateName: template.templateName,

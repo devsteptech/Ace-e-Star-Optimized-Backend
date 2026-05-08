@@ -9,7 +9,12 @@ function key(s: string) {
 
 function timeStr(d: Date | null) {
     if (!d) return "-";
-    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return d.toLocaleTimeString("en-US", {
+        timeZone: "America/Chicago",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
 }
 
 export async function listMyGuests(req: Request, res: Response) {
@@ -32,7 +37,11 @@ export async function listMyGuests(req: Request, res: Response) {
 
 export async function checkIn(req: Request, res: Response) {
     const eventId = req.user?.eventId;
-    const { name, relation } = (req.body ?? {}) as { name?: string; relation?: string };
+    const { name, relation, feedback } = (req.body ?? {}) as {
+        name?: string;
+        relation?: string;
+        feedback?: { label?: string; value?: string }[];
+    };
 
     if (!eventId) return res.status(401).json({ message: "No eventId" });
     if (!name || !relation) return res.status(400).json({ message: "name and relation required" });
@@ -47,6 +56,17 @@ export async function checkIn(req: Request, res: Response) {
     if (g.status === "Checked Out") {
         return res.status(400).json({ message: "Guest already checked out" });
     }
+
+    const cleaned = Array.isArray(feedback)
+        ? feedback
+            .map((x: any) => ({
+                label: String(x?.label ?? "").trim(),
+                value: String(x?.value ?? "").trim(),
+            }))
+            .filter((x: any) => x.label.length > 0 && x.value.length > 0)
+        : [];
+
+    if (cleaned.length) g.feedback = cleaned;
 
     g.status = "Checked In";
     g.checkedInAt = new Date();
@@ -93,10 +113,11 @@ export async function walkInCheckIn(req: Request, res: Response) {
     const eventId = req.user?.eventId;
     if (!eventId) return res.status(401).json({ message: "No eventId in token" });
 
-    const { name, relation, action } = (req.body ?? {}) as {
+    const { name, relation, action, feedback } = (req.body ?? {}) as {
         name?: string;
         relation?: string;
         action?: "checkin" | "checkout";
+        feedback?: { label?: string; value?: string }[];
     };
 
     if (!name?.trim() || !relation?.trim()) {
@@ -146,6 +167,15 @@ export async function walkInCheckIn(req: Request, res: Response) {
         });
     }
 
+    const cleaned = Array.isArray(feedback)
+        ? feedback
+            .map((x: any) => ({
+                label: String(x?.label ?? "").trim(),
+                value: String(x?.value ?? "").trim(),
+            }))
+            .filter((x: any) => x.label.length > 0 && x.value.length > 0)
+        : [];
+
     let g: any = existing;
 
     if (!g) {
@@ -159,6 +189,7 @@ export async function walkInCheckIn(req: Request, res: Response) {
             status: "Pending",
             checkedInAt: null,
             checkedOutAt: null,
+            feedback: cleaned,
         });
     }
 
@@ -169,6 +200,8 @@ export async function walkInCheckIn(req: Request, res: Response) {
     if (g.status === "Checked Out") {
         return res.status(400).json({ message: "Guest already checked out" });
     }
+
+    if (cleaned.length) g.feedback = cleaned;
 
     g.status = "Checked In";
     g.checkedInAt = now;

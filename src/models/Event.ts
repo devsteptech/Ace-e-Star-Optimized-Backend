@@ -3,14 +3,24 @@ import { Schema, model, type InferSchemaType } from "mongoose";
 const eventSchema = new Schema(
     {
         templateId: { type: Schema.Types.ObjectId, ref: "Template", required: true },
-        templateType: { type: String, required: true }, 
+        templateType: { type: String, required: true },
 
         name: { type: String, required: true },
-        eventDate: { type: String, default: "" }, 
+        eventDate: { type: String, default: "" },
         venue: { type: String, default: "" },
         description: { type: String, default: "" },
         expectedGuests: { type: String, default: "" },
         logoUrl: { type: String, default: "" },
+
+        questions: {
+            type: [
+                {
+                    label: { type: String, default: "" },
+                    placeholder: { type: String, default: "" },
+                },
+            ],
+            default: [],
+        },
 
         status: { type: String, enum: ["On Going", "Completed"], default: "On Going" },
 
@@ -18,7 +28,7 @@ const eventSchema = new Schema(
 
         endedAt: { type: Date, default: null },
 
-        eventManagerEmail: { type: String, required: true }
+        eventManagerEmail: { type: String, required: true },
     },
     { timestamps: true }
 );

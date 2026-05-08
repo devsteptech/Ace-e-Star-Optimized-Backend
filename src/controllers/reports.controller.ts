@@ -53,6 +53,7 @@ export async function getReportDetail(req: Request, res: Response) {
             checkInTime: timeStr(g.checkedInAt || null),
             type: g.type,
             status: g.status,
+            feedback: Array.isArray(g.feedback) ? g.feedback : [],
         }));
 
     const checkinDates = attended

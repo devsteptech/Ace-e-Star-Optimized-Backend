@@ -29,7 +29,6 @@ export async function listEvents(_req: Request, res: Response) {
     const data = docs.map((e: any) => {
         const isCompleted = e.status === "Completed";
 
-
         const endBase: Date | null = isCompleted
             ? (e.endedAt || e.updatedAt || null)
             : null;
@@ -43,7 +42,7 @@ export async function listEvents(_req: Request, res: Response) {
             endTime: isCompleted && endBase ? timeAgo(new Date(endBase)) : "-",
 
             logoUrl: e.logoUrl || "",
-            eventManagerEmail: e.eventManagerEmail || ""
+            eventManagerEmail: e.eventManagerEmail || "",
         };
     });
 
@@ -64,6 +63,15 @@ export async function createEvent(req: Request, res: Response) {
     const template: any = await Template.findById(templateId);
     if (!template) return res.status(404).json({ message: "Template not found" });
 
+    const questionsRaw = Array.isArray(b.questions) ? b.questions : [];
+    const questions = questionsRaw
+        .map((q: any) => ({
+            label: String(q?.label ?? "").trim(),
+            placeholder: String(q?.placeholder ?? "").trim(),
+        }))
+        // keep only valid rows (both required)
+        .filter((q: any) => q.label.length > 0 && q.placeholder.length > 0);
+
     const password = crypto.randomBytes(6).toString("base64url");
     const passwordHash = await bcrypt.hash(password, 10);
     const passwordEnc = encryptText(password);
@@ -79,11 +87,13 @@ export async function createEvent(req: Request, res: Response) {
         expectedGuests: b.expectedGuests ?? "",
         logoUrl: b.logoUrl ?? "",
 
+        questions,
+
         status: "On Going",
         endTime: "-",
-        endedAt: null, 
+        endedAt: null,
 
-        eventManagerEmail
+        eventManagerEmail,
     });
 
     await EventManager.findOneAndUpdate(
@@ -95,7 +105,7 @@ export async function createEvent(req: Request, res: Response) {
     await sendEventManagerCredentials({
         to: eventManagerEmail,
         eventName: ev.name,
-        password
+        password,
     });
 
     return res.json({ message: "Event created & email sent", eventId: String(ev._id) });
@@ -117,7 +127,7 @@ export async function getEventCredentials(req: Request, res: Response) {
         eventName: ev.name,
         eventManagerEmail: mgr.email,
         password,
-        logoUrl: ev.logoUrl || ""
+        logoUrl: ev.logoUrl || "",
     });
 }
 
@@ -128,8 +138,8 @@ export async function endEvent(req: Request, res: Response) {
         id,
         {
             status: "Completed",
-            endedAt: new Date(),  
-            endTime: "-"          
+            endedAt: new Date(),
+            endTime: "-",
         },
         { new: true }
     );
@@ -144,6 +154,6 @@ export async function endEvent(req: Request, res: Response) {
         status: ev.status,
         endTime: ev.endedAt ? timeAgo(new Date(ev.endedAt)) : "just now",
         logoUrl: ev.logoUrl || "",
-        eventManagerEmail: ev.eventManagerEmail || ""
+        eventManagerEmail: ev.eventManagerEmail || "",
     });
 }

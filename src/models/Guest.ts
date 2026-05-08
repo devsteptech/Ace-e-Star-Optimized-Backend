@@ -13,11 +13,21 @@ const guestSchema = new Schema(
         extra: { type: Schema.Types.Mixed, default: {} },
         extraKeys: { type: Schema.Types.Mixed, default: {} },
 
+        feedback: {
+            type: [
+                {
+                    label: { type: String, default: "" },
+                    value: { type: String, default: "" },
+                },
+            ],
+            default: [],
+        },
+
         status: { type: String, enum: ["Pending", "Checked In", "Checked Out"], default: "Pending" },
         type: { type: String, enum: ["Pre-registered", "Walk-in"], default: "Pre-registered" },
 
         checkedInAt: { type: Date, default: null },
-        checkedOutAt: { type: Date, default: null }
+        checkedOutAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
