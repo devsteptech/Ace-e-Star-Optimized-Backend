@@ -69,7 +69,6 @@ export async function createEvent(req: Request, res: Response) {
             label: String(q?.label ?? "").trim(),
             placeholder: String(q?.placeholder ?? "").trim(),
         }))
-        // keep only valid rows (both required)
         .filter((q: any) => q.label.length > 0 && q.placeholder.length > 0);
 
     const password = crypto.randomBytes(6).toString("base64url");
